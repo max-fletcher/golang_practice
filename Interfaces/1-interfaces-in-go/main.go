@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// NOTE: In GO, interfaces are implicitly implemented i.e if all criterias of an interface are met, the struct is said to have implemented that interface
+
 // This is a normal function
 func sendMessage(msg message) (string, int) {
 	return msg.getMessage(), (len(msg.getMessage()) * 3)
