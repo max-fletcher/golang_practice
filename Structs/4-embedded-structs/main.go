@@ -6,9 +6,13 @@ type sender struct {
 	rateLimit int
 }
 
-// embedded struct i.e the sender has no name. It is directly accessible i.e
+// embedded struct i.e the sender has no name. It is both directly accessible i.e
 // newUserZ := user2{}
 // newUserZ.rateLimit = 1000
+// as well as can be accessed via the field called sender i.e
+// newUserZ := user2{}
+// newUserZ.sender.rateLimit = 1000
+// This is because of a phenomenon called "promotion" which causes the inner fields to be inherited(not in OOP sense) by the parent
 type user1 struct {
 	name   string
 	number int
@@ -32,6 +36,7 @@ func main() {
 	newUser1.rateLimit = 200
 
 	fmt.Printf(" Name: %s\n number: %d\n rateLimit: %d\n\n", newUser1.name, newUser1.number, newUser1.rateLimit)
+	fmt.Printf(" Name: %s\n number: %d\n rateLimit: %d\n\n", newUser1.name, newUser1.number, newUser1.sender.rateLimit)
 
 	// ALSO an instance(shorthand) that creates an instance of embedded struct. Notice the comma at the end of "}" (line  43). It is needed to have this trailing comma else GO throws an error
 	newUser2 := user1{
@@ -42,6 +47,7 @@ func main() {
 		},
 	}
 
+	fmt.Printf(" Name: %s\n number: %d\n rateLimit: %d\n\n", newUser2.name, newUser2.number, newUser2.rateLimit)
 	fmt.Printf(" Name: %s\n number: %d\n rateLimit: %d\n\n", newUser2.name, newUser2.number, newUser2.sender.rateLimit)
 
 	// An instance that uses nested struct
