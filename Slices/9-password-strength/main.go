@@ -10,14 +10,14 @@ func isValidPassword(password string) bool {
 	containsUppercase := false
 	containsNum := false
 	for _, char := range password {
-		// Contains at least one uppercase letter.
+		// Contains at least one uppercase letter
 		if char >= 65 && char <= 90 {
 			containsUppercase = true
 		}
+		// Contains at least one digit
 		if char >= 48 && char <= 57 {
 			containsNum = true
 		}
-		// Contains at least one digit.
 	}
 
 	return containsUppercase && containsNum
