@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// NOTE: This is an example of unbuffered channels i.e No limits are defined when the channel was made. It is synchronous by nature i.e the sender will block the execution until the receiver is ready to receive the data.
+
 // Start: Defining enums
 type OrderStatus string
 
@@ -40,13 +42,18 @@ func generateOrders(count int) []*Order { // returns an array of pointers to Ord
 	return orders
 }
 
-func processOrders(orders []*Order) { // accept a array of pointers to Order structs
+// accept an orderChan channel that receives [a pointer to an Order struct]/*Order and a WaitGroup. The arrow denotes that here, we will only receive *Order via this channel and not send
+// anything(which is usually the default i.e send and receive if no arrows are used).
+func processOrders(orderChan <-chan *Order, wg *sync.WaitGroup) {
+	defer wg.Done() // decrement the WaitGroup
+
 	fmt.Println("\n--- PROCESS ORDERS ---")
-	for _, order := range orders {
+	for order := range orderChan { // This loop is special. It tells the go runtime that we are looping through the *Orders received via this orderChannel until the channel is closed
 		// Simulating some work being done using the sleep function
 		time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
 		fmt.Printf("Process order no. %d.\n", order.ID)
 	}
+
 	fmt.Println("-----------------------------")
 }
 
@@ -85,30 +92,28 @@ func reportOrderStatus(orders []*Order) { // accept ar array of pointers to Orde
 
 func main() {
 	wg := sync.WaitGroup{}
-	wg.Add(3) //Add the number of goroutines that the WaitGroup will run
+	wg.Add(2) //Add the number of goroutines that the WaitGroup will run
 
-	orders := generateOrders(20)
-	fmt.Println("Orders after initialization", orders)
-
-	fmt.Println("Start Processing Orders")
+	orderChan := make(chan *Order) // Make a channel that sends and/or accepts an Order struct
 
 	go func() { // We are running this anonymous func as a goroutine
 		defer wg.Done() // the keyword "defer" is used to execute a line of code at the end of this function
-		processOrders(orders)
+		for _, order := range generateOrders(20) {
+			orderChan <- order // Tells golang to send an Order into the orderChan channel. Remember that this is a blocking operation so until the sent data is received by something, execution will not move forward
+		}
+
+		// We need to close the channel after sending is done i.e after the loop terminates. Else a deadlock will occur due to a receiver trying to receive data, but there is no sender in place(in this case). The vice versa can happen as well.
+		// The best practice is to close the channel on the sender side for unbuffered channels.
+		close(orderChan)
+
+		fmt.Println("Done with generating orders")
 	}()
 
-	// go func() { // We are running this anonymous func as a goroutine
-	// 	defer wg.Done() // the keyword "defer" is used to execute a line of code at the end of this function
-	// 	updateOrderStatuses(orders)
-	// }()
+	fmt.Println("Start Processing Orders")
 
-	// NOTE: We are using the above anonymous functions instead of the lines below because otherwise, we won't be able to see the fmt.Print statements in the terminal
-	// go processOrders(orders)
-	// go updateOrderStatuses(orders)
-	// go reportOrderStatus(orders)
+	go processOrders(orderChan, &wg)
 
 	wg.Wait() // Works like await. Will make the go runtime wait until the processes above finish i.e the counter/WaitGroup becomes zero
 
-	reportOrderStatus(orders)
 	fmt.Println("End Processing Orders")
 }
