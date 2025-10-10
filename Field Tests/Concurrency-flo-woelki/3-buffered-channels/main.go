@@ -7,17 +7,16 @@ import (
 	"time"
 )
 
-// NOTE: This is an example of unbuffered channels i.e No limits are defined when the channel was made. It is synchronous by nature i.e the sender will block the execution until the receiver is ready to receive the data.
-// 1. It ensures immediate processing and tight synchronization.
-// 2. It also ensures that the data exchange between goroutines and channels happens simultaneously between sender and receiver, so its like a portal.
-// 3. It provides a guarantee that this data is received as soon as data is sent
+// NOTE: This is an example of buffered channels i.e Limits(max data the channel can hold) are defined when the channel was made(works kinda like a queue).
+// 1. It is asynchronous by nature i.e the sender will not block the execution even if the receiver is not ready to receive the data(means the sender can send data even if receiver is not ready.
+// 2. Data will be pushed to the channel like a queue. The sender is only blocked when the channel is full(kinda like when a queue is full).
+// 3. It ensures decoupling(data is processed later instead of immediately when the sender sends data).
 
-// NOTE: Sequence of events -> The logic inside the range loop opens a channel but is blocked due to the receiver not being ready i.e ProcessOrders() is not ran yet so receiver isn't created yet.
-// The "fmt.Println("Start Processing Orders")" is ran followed by "go processOrders(orderChan, &wg)", which opens the channel receiver.
-// You will see that "Done with generating orders" will be shown after "Process order no. 19." and before "Process order no. 20.".
-// This is because when the last order was sent, the sender is not blocked anymore and "close(orderChan)" was immediately ran and fmt.Println("Done with generating orders") was ran before the
-// last order was processes. This shows that orders are sent one by one and sending the last order causes execution to move forward(in anonymous func) regardless of if the "go processOrders()"
-// goroutine finishes executing or not. And until "go processOrders()", the wg.Wait() keeps "main" waiting for it to finish.
+// NOTE: Sqeuence of events -> You will see that "Done with generating orders" will be shown before "Process order no. 1.". This is because all orders are sent immediately into the channel (we send approximately 20 orders to
+// a channel with a capacity of 20 so channel is filled immediately), before any of them are finished processing(due to the time.Sleep() inside processOrders()). After sending all the messages into the channel,
+// "close(orderChan)" is immediately ran to close the channel so no new data cannot be sent and fmt.Println("Done with generating orders") was ran before the receiver is even generated via "go processOrders(orderChan, &wg)".
+// When the receiver is created via "go processOrders()", the sent data is received 1 by 1 and processed sequentially until that goroutine finished all data inside the channel while the wg.Wait() keeps "main" waiting for it
+// to finish.
 
 // Start: Defining enums
 type OrderStatus string
@@ -104,7 +103,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2) //Add the number of goroutines that the WaitGroup will run
 
-	orderChan := make(chan *Order) // Make an unbuffered channel that sends and/or accepts an Order struct
+	orderChan := make(chan *Order, 20) // Make a buffered channel that sends and/or accepts an Order struct
 
 	go func() { // We are running this anonymous func as a goroutine
 		defer wg.Done() // the keyword "defer" is used to execute a line of code at the end of this function
