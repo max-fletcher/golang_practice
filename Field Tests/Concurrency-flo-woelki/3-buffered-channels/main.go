@@ -103,7 +103,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2) //Add the number of goroutines that the WaitGroup will run
 
-	orderChan := make(chan *Order, 20) // Make a buffered channel that sends and/or accepts an Order struct
+	orderChan := make(chan *Order, 20) // Make a buffered channel that sends and/or accepts an Order struct(actually, a pointer to an Order struct, but ya)
 
 	go func() { // We are running this anonymous func as a goroutine
 		defer wg.Done() // the keyword "defer" is used to execute a line of code at the end of this function
