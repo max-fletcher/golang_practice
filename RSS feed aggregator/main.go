@@ -37,7 +37,7 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(httprate.Limit(
-		1,             // number of requests
+		100,           // number of requests
 		1*time.Minute, // time window
 		// The third parameter and onwards accepts multiple option functions(httprate.Limit is variadic funtion), which are handler functions
 		// that have many variations. e.g "httprate.WithLimitHandler" is a custom handler function that you can add more logic
@@ -58,16 +58,10 @@ func main() {
 		// 	}),
 		// )
 		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-			respondWithJSON(w, 200, response{
-				Code:    200,
+			respondWithJSON(w, 429, response{
+				Code:    429,
 				Status:  "ok",
-				Message: "Server running",
-			})
-
-			respondWithJSON(w, 200, response{
-				Code:    200,
-				Status:  "ok",
-				Message: "Server running",
+				Message: "Too many requests. Rate limit exceeded.",
 			})
 		}),
 	))
@@ -91,6 +85,7 @@ func main() {
 	// Making a sub-router
 	v1router := chi.NewRouter()
 	v1router.Get("/healthz", handlerReadiness)
+	v1router.Get("/error", handlerError)
 	router.Mount("/v1", v1router)
 
 	// Server options like router and port
