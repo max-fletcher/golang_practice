@@ -12,9 +12,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
 )
 
@@ -34,6 +36,41 @@ func main() {
 	fmt.Printf("PORT: %v", portString)
 
 	router := chi.NewRouter()
+	router.Use(httprate.Limit(
+		1,             // number of requests
+		1*time.Minute, // time window
+		// The third parameter and onwards accepts multiple option functions(httprate.Limit is variadic funtion), which are handler functions
+		// that have many variations. e.g "httprate.WithLimitHandler" is a custom handler function that you can add more logic
+		// to(if you need to). Here, it sends back a custom json response. But if you want to choose which key to use to rate-limit,
+		// you can use "httprate.WithKeyFuncs" where you can define what keys should be used to rate-limit requests like this:
+		// httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
+		// 	return r.Header.Get("X-User-ID"), nil
+		// }),
+		// You can also pass multiple of these; each option function controlling an aspect of the rate-limiter e.g:
+		// httprate.Limit(
+		// 	100,
+		// 	time.Minute,
+		// 	httprate.WithKeyFuncs(httprate.KeyByIP),
+		// 	httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+		// 		respondWithJSON(w, 429, map[string]string{
+		// 			"error": "rate limit exceeded",
+		// 		})
+		// 	}),
+		// )
+		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+			respondWithJSON(w, 200, response{
+				Code:    200,
+				Status:  "ok",
+				Message: "Server running",
+			})
+
+			respondWithJSON(w, 200, response{
+				Code:    200,
+				Status:  "ok",
+				Message: "Server running",
+			})
+		}),
+	))
 
 	// CORS
 	router.Use(cors.Handler(cors.Options{
@@ -58,14 +95,14 @@ func main() {
 
 	// Server options like router and port
 	// On windows, to start the server, use "go build -o {filename}.exe" then ".\go-rss-agg.exe"
-	srv := &http.Server{
+	server := &http.Server{
 		Handler: router,
 		Addr:    ":" + portString,
 	}
 
 	log.Printf("Server starting on port %v", portString)
-	err := srv.ListenAndServe() // initialize server
-	if err != nil {             // throws an error if the server fails
+	err := server.ListenAndServe() // initialize server
+	if err != nil {                // throws an error if the server fails
 		log.Fatal(err)
 	}
 }
