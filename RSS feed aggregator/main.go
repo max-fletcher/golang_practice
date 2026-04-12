@@ -7,6 +7,11 @@ package main
 // "go list -m all" to see a list of all packages
 // "go mod why github.com/go-chi/chi/v5" to check why a package exists
 // "go install github.com/some/tool@latest"; only use "get" when installing binaries
+// Remember that this is not the same as downloading packages like "github.com/sqlc-dev/sqlc/cmd/sqlc@latest" or
+// "go install github.com/pressly/goose/v3/cmd/goose@latest" that we have
+// to use the command "go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest" to get. The reason being that sqlc is a tool
+// (a set of binaries to be specific) that are not part of our application i.e nothing is downloaded into vendor and
+// when we use "go build -o {filename}.exe", it is not compiled into the application.
 import (
 	"fmt"
 	"log"
