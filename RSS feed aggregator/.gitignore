@@ -1,4 +1,3 @@
 .vscode/
 go-rss-agg
 .env
-vendor
