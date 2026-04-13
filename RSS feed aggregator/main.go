@@ -3,6 +3,8 @@ package main
 // # IMPORTING PACKAGES:
 // To import 3rd party modules for go, import and use the package in your file then use
 // "go mod tidy"(cleanup unused deps) and then "go mod vendor"(copy only what’s needed).
+// Although some packages like "github.com/google/uuid" and "github.com/lib/pq"
+// requires the "go get" command to install.
 // Here are some other useful commands:
 // "go list -m all" to see a list of all packages
 // "go mod why github.com/go-chi/chi/v5" to check why a package exists
@@ -13,6 +15,8 @@ package main
 // (a set of binaries to be specific) that are not part of our application i.e nothing is downloaded into vendor and
 // when we use "go build -o {filename}.exe", it is not compiled into the application.
 import (
+	"database/sql"
+	"dummy/internal/database"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,7 +27,13 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
+
+// Reference to a DB connection. Will be used to query data form DB.
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func main() {
 	fmt.Println("Web Server made in GO")
@@ -36,6 +46,24 @@ func main() {
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("Port is not found in the .env file")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL is not found in env")
+	}
+
+	// using go's sql package from its standard library to establish connection
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Can't connect to the database", err)
+	}
+	err = conn.Ping()
+	if err != nil {
+		log.Fatal("DB not reachable:", err)
+	}
+	apiCfg := apiConfig{
+		DB: database.New(conn),
 	}
 
 	fmt.Printf("PORT: %v", portString)
@@ -91,6 +119,7 @@ func main() {
 	v1router := chi.NewRouter()
 	v1router.Get("/healthz", handlerReadiness)
 	v1router.Get("/error", handlerError)
+	v1router.Post("/users", apiCfg.handlerCreateUser) // route for creating users in DB
 	router.Mount("/v1", v1router)
 
 	// Server options like router and port
@@ -101,8 +130,8 @@ func main() {
 	}
 
 	log.Printf("Server starting on port %v", portString)
-	err := server.ListenAndServe() // initialize server
-	if err != nil {                // throws an error if the server fails
+	err = server.ListenAndServe() // initialize server
+	if err != nil {               // throws an error if the server fails
 		log.Fatal(err)
 	}
 }

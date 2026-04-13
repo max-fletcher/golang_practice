@@ -6,6 +6,19 @@ import (
 	"net/http"
 )
 
+// TODO: Where should these (successResponse and errorResponse) be placed ??
+type successResponse struct {
+	Code   int         `json:"code"`
+	Status string      `json:"status"`
+	Data   interface{} `json:"data,omitempty"`
+}
+
+type errorResponse struct {
+	Code   int    `json:"code"`
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
+}
+
 // This function will take a message(string) and malshal it into a structured JSON string that will be sent as bytes of data
 func respondWithError(w http.ResponseWriter, code int, msg string) {
 	if code > 499 {
