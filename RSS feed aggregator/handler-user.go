@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dummy/formatters"
 	"dummy/internal/database"
 	"encoding/json"
 	"fmt"
@@ -10,8 +11,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// handler method that handles user creation. The addition of (apiCfg apiCfg) makes apiCfg available to this function
-// and turning it into a method.
+// handler method that handles user creation. The addition of (apiCfg apiCfg)
+// turns it into a method for apiConfig.
 func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
@@ -41,6 +42,6 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 	respondWithJSON(w, 201, successResponse{
 		Code:   201,
 		Status: "ok",
-		Data:   user,
+		Data:   formatters.DatabaseUserToUser(user),
 	})
 }
