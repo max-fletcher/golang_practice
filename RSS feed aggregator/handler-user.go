@@ -2,6 +2,7 @@ package main
 
 import (
 	"dummy/formatters"
+	"dummy/internal/auth"
 	"dummy/internal/database"
 	"encoding/json"
 	"fmt"
@@ -41,6 +42,39 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 
 	respondWithJSON(w, 201, successResponse{
 		Code:   201,
+		Status: "ok",
+		Data:   formatters.DatabaseUserToUser(user),
+	})
+}
+
+// handler method that handles user creation. The addition of (apiCfg apiCfg) turns it into a method for apiConfig.
+// This is now used to show another way to implement middleware(see route with "handlerGetUserByAPIKey2" func)
+func (apiCfg *apiConfig) handlerGetUserByAPIKey2(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, 403, fmt.Sprintf("Auth error: %v", err))
+		return
+	}
+
+	// 1st param: context for the request
+	// 2nd param: the struct that we want to pass so it saves the underlying data in DB
+	user, err := apiCfg.DB.GetUserByAPIKey(r.Context(), apiKey)
+	if err != nil {
+		respondWithError(w, 401, fmt.Sprintf("User not found: %v", err))
+		return
+	}
+
+	respondWithJSON(w, 200, successResponse{
+		Code:   200,
+		Status: "ok",
+		Data:   formatters.DatabaseUserToUser(user),
+	})
+}
+
+// Turned this to a different function that canwill only be used in an auth middleware(see auth.go in root folder and "handlerGetUserByAPIKey" route)
+func (apiCfg *apiConfig) handlerGetUserByAPIKey(w http.ResponseWriter, r *http.Request, user database.User) {
+	respondWithJSON(w, 200, successResponse{
+		Code:   200,
 		Status: "ok",
 		Data:   formatters.DatabaseUserToUser(user),
 	})

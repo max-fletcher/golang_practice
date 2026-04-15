@@ -15,6 +15,7 @@ type User struct {
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	APIKey    string    `json:"api_key"`
 }
 
 // NOTE: Exporting functions from a folder(a.k.a a package as different folders are each considered a package in go)
@@ -30,5 +31,6 @@ func DatabaseUserToUser(dbUser database.User) User {
 		Name:      dbUser.Name,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
+		APIKey:    dbUser.ApiKey,
 	}
 }
