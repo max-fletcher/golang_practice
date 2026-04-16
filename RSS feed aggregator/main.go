@@ -17,7 +17,6 @@ package main
 import (
 	"database/sql"
 	"dummy/internal/database"
-	auth "dummy/middlewares"
 	"fmt"
 	"log"
 	"net/http"
@@ -120,13 +119,14 @@ func main() {
 	v1router := chi.NewRouter()
 
 	// Another way to use an auth middleware
-	v1router.Use(auth.AuthenticatedMiddleware(apiCfg.DB))
-	v1router.Get("/users2", apiCfg.handlerGetUserByAPIKey2) // route for getting user by apiKey header in DB
+	// v1router.Use(auth.AuthenticatedMiddleware(apiCfg.DB))
+	// v1router.Get("/users2", apiCfg.handlerGetUserByAPIKey2) // route for getting user by apiKey header in DB
 
 	v1router.Get("/healthz", handlerReadiness)
 	v1router.Get("/error", handlerError)
 	v1router.Post("/users", apiCfg.handlerCreateUser)                                     // route for creating users in DB
 	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey)) // route for getting user by apiKey header in DB
+	v1router.Get("/feeds", apiCfg.handlerGetFeeds)                                        // route for getting all feed in DB
 	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed))     // route for creating a feed in DB
 	router.Mount("/v1", v1router)
 

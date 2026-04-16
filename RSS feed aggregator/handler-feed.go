@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// handler method that handles user creation. The addition of (apiCfg apiCfg)
+// handler method that handles feed creation. The addition of (apiCfg apiCfg)
 // turns it into a method for apiConfig.
 func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
@@ -38,7 +38,7 @@ func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("Couldn't create user: %v", err))
+		respondWithError(w, 400, fmt.Sprintf("Couldn't create feed: %v", err))
 		return
 	}
 
@@ -46,5 +46,22 @@ func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		Code:   201,
 		Status: "ok",
 		Data:   formatters.DatabaseFeedToFeed(feed),
+	})
+}
+
+// handler method that handles fetching all feeds. The addition of (apiCfg apiCfg)
+// turns it into a method for apiConfig.
+func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
+	// 1st param: context for the request
+	feeds, err := apiCfg.DB.GetFeeds(r.Context())
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Failed to fetch feeds: %v", err))
+		return
+	}
+
+	respondWithJSON(w, 200, successResponse{
+		Code:   200,
+		Status: "ok",
+		Data:   formatters.DatabaseFeedsToFeeds(feeds),
 	})
 }

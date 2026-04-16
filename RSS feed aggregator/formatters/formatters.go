@@ -56,3 +56,24 @@ func DatabaseFeedToFeed(dbFeed database.Feed) Feed {
 		UpdatedAt: dbFeed.UpdatedAt,
 	}
 }
+
+func DatabaseFeedsToFeeds(dbFeeds []database.Feed) []Feed {
+	feeds := []Feed{}
+
+	// remember that when looping through an array of slices using range, the 1st val is index and the 2nd value are the individual slices
+	for _, dbFeed := range dbFeeds {
+		feeds = append(feeds, Feed{
+			ID:        dbFeed.ID,
+			Name:      dbFeed.Name,
+			Url:       dbFeed.Url,
+			UserID:    dbFeed.UserID,
+			CreatedAt: dbFeed.CreatedAt,
+			UpdatedAt: dbFeed.UpdatedAt,
+		})
+
+		// This also works if you want to reuse functionality
+		// feeds = append(feeds, DatabaseFeedToFeed(dbFeed))
+	}
+
+	return feeds
+}

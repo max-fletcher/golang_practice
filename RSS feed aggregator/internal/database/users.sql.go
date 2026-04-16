@@ -29,7 +29,7 @@ type CreateUserParams struct {
 }
 
 // The syntax for a sqlc query is like this->->name: {funcName} :{noOfRecordsToReturn}
-// After defining your schema use "sqlc generate" to generate the functions
+// After defining your schema, go to your project root(where sqlc.yaml is) and use "sqlc generate" to generate the functions
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
