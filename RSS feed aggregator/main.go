@@ -127,6 +127,7 @@ func main() {
 	v1router.Get("/error", handlerError)
 	v1router.Post("/users", apiCfg.handlerCreateUser)                                     // route for creating users in DB
 	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey)) // route for getting user by apiKey header in DB
+	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed))     // route for creating a feed in DB
 	router.Mount("/v1", v1router)
 
 	// Server options like router and port

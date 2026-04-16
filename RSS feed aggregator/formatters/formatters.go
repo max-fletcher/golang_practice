@@ -34,3 +34,25 @@ func DatabaseUserToUser(dbUser database.User) User {
 		APIKey:    dbUser.ApiKey,
 	}
 }
+
+type Feed struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Url       string    `json:"url"`
+	UserID    uuid.UUID `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// This is a function that converts struct keys from pascal-case to use camel-case. This is so we get camel-cased JSON.
+// Remember that database.go has the type for the user being fetched from database and that is being passed here.
+func DatabaseFeedToFeed(dbFeed database.Feed) Feed {
+	return Feed{
+		ID:        dbFeed.ID,
+		Name:      dbFeed.Name,
+		Url:       dbFeed.Url,
+		UserID:    dbFeed.UserID,
+		CreatedAt: dbFeed.CreatedAt,
+		UpdatedAt: dbFeed.UpdatedAt,
+	}
+}
