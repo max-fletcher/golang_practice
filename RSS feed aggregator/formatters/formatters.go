@@ -71,9 +71,46 @@ func DatabaseFeedsToFeeds(dbFeeds []database.Feed) []Feed {
 			UpdatedAt: dbFeed.UpdatedAt,
 		})
 
-		// This also works if you want to reuse functionality
+		// This also works if you want to reuse functionality i.e replace above block with the line below
 		// feeds = append(feeds, DatabaseFeedToFeed(dbFeed))
 	}
 
 	return feeds
+}
+
+type FeedFollow struct {
+	ID        uuid.UUID `json:"id"`
+	FeedID    uuid.UUID `json:"feed_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func DatabaseFeedFollowToFeedFollow(dbFeed database.FeedFollow) FeedFollow {
+	return FeedFollow{
+		ID:        dbFeed.ID,
+		FeedID:    dbFeed.FeedID,
+		UserID:    dbFeed.UserID,
+		CreatedAt: dbFeed.CreatedAt,
+		UpdatedAt: dbFeed.UpdatedAt,
+	}
+}
+
+func DatabaseFeedFollowsToFeedFollows(dbFeedFollows []database.FeedFollow) []FeedFollow {
+	feedFollows := []FeedFollow{}
+
+	for _, dbFeedFollow := range dbFeedFollows {
+		feedFollows = append(feedFollows, FeedFollow{
+			ID:        dbFeedFollow.ID,
+			FeedID:    dbFeedFollow.FeedID,
+			UserID:    dbFeedFollow.UserID,
+			CreatedAt: dbFeedFollow.CreatedAt,
+			UpdatedAt: dbFeedFollow.UpdatedAt,
+		})
+
+		// This also works if you want to reuse functionality i.e replace above block with the line below
+		// feeds = append(feeds, DatabaseFeedFollowToFeedFollow(dbFeed))
+	}
+
+	return feedFollows
 }

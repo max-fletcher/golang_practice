@@ -124,10 +124,12 @@ func main() {
 
 	v1router.Get("/healthz", handlerReadiness)
 	v1router.Get("/error", handlerError)
-	v1router.Post("/users", apiCfg.handlerCreateUser)                                     // route for creating users in DB
-	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey)) // route for getting user by apiKey header in DB
-	v1router.Get("/feeds", apiCfg.handlerGetFeeds)                                        // route for getting all feed in DB
-	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed))     // route for creating a feed in DB
+	v1router.Post("/users", apiCfg.handlerCreateUser)                                                           // route for creating users in DB
+	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey))                       // route for getting user by apiKey header in DB
+	v1router.Get("/feeds", apiCfg.handlerGetFeeds)                                                              // route for getting all feed in DB
+	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed))                           // route for creating a feed in DB
+	v1router.Post("/feed_follows", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeedFollow))              // route for creating a feed follow in DB
+	v1router.Get("/feed_follows_by_user", apiCfg.authenticatedMiddleware(apiCfg.handlerGetFeedFollowsByUserID)) // route for getting all feed follows in DB
 	router.Mount("/v1", v1router)
 
 	// Server options like router and port
