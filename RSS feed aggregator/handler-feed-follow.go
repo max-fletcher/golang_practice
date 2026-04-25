@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"dummy/formatters"
 	"dummy/internal/database"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -61,5 +63,36 @@ func (apiCfg *apiConfig) handlerGetFeedFollowsByUserID(w http.ResponseWriter, r 
 		Code:   200,
 		Status: "ok",
 		Data:   formatters.DatabaseFeedFollowsToFeedFollows(feedFollows),
+	})
+}
+
+func (apiCfg *apiConfig) handleDeleteFeedFollowsById(w http.ResponseWriter, r *http.Request, user database.User) {
+	feedFollowIdString := chi.URLParam(r, "feedFollowId")
+	feedFollowId, err := uuid.Parse(feedFollowIdString)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Error parsing feed follow ID: %v", err))
+		return
+	}
+
+	// The error handling below is how the deletion logic should be handled i.e if delete command returns a zero, it should mention that it doesn't exist.
+	// Also, this(if err == sql.ErrNoRows{...}) is how sqlc checks if no rows were returned as a result of a query
+	err = apiCfg.DB.DeleteFeedFollowsById(r.Context(),
+		database.DeleteFeedFollowsByIdParams{
+			ID:     feedFollowId,
+			UserID: user.ID,
+		})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			respondWithError(w, 404, fmt.Sprintf("Feed follow with ID %v not found", feedFollowId))
+			return
+		}
+		respondWithError(w, 400, fmt.Sprintf("Failed to delete feed follow with ID %v: %v", feedFollowId, err))
+		return
+	}
+
+	respondWithJSON(w, 200, successResponse{
+		Code:   200,
+		Status: "ok",
+		Data:   fmt.Sprintf("Feed follow with ID %v deleted sucessfully", feedFollowId),
 	})
 }
