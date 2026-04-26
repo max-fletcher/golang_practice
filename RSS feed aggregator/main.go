@@ -36,6 +36,12 @@ type apiConfig struct {
 }
 
 func main() {
+	feed, err := urlToFeed("https://wagslane.dev/index.xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(feed)
+
 	fmt.Println("Web Server made in GO")
 
 	// We are using this because we need to set a bridge, When we use "os.Getenv" it only checks the os's
@@ -65,6 +71,10 @@ func main() {
 	apiCfg := apiConfig{
 		DB: database.New(conn),
 	}
+
+	// SCRAPER:
+	db := database.New(conn)              // creating new database connection
+	go startScraping(db, 10, time.Minute) // Calling the scraper to start the process, and it will keep on running.
 
 	fmt.Printf("PORT: %v", portString)
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"dummy/formatters"
 	"dummy/internal/database"
 	"encoding/json"
@@ -76,17 +75,18 @@ func (apiCfg *apiConfig) handleDeleteFeedFollowsById(w http.ResponseWriter, r *h
 
 	// The error handling below is how the deletion logic should be handled i.e if delete command returns a zero, it should mention that it doesn't exist.
 	// Also, this(if err == sql.ErrNoRows{...}) is how sqlc checks if no rows were returned as a result of a query
-	err = apiCfg.DB.DeleteFeedFollowsById(r.Context(),
+	rows, err := apiCfg.DB.DeleteFeedFollowsById(r.Context(),
 		database.DeleteFeedFollowsByIdParams{
 			ID:     feedFollowId,
 			UserID: user.ID,
 		})
 	if err != nil {
-		if err == sql.ErrNoRows {
-			respondWithError(w, 404, fmt.Sprintf("Feed follow with ID %v not found", feedFollowId))
-			return
-		}
 		respondWithError(w, 400, fmt.Sprintf("Failed to delete feed follow with ID %v: %v", feedFollowId, err))
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, 404, fmt.Sprintf("Feed follow with ID %v not found", feedFollowId))
 		return
 	}
 

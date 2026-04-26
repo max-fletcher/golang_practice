@@ -29,8 +29,9 @@ type CreateFeedFollowParams struct {
 
 // The syntax for a sqlc query is like this->->name: {funcName} :{noOfRecordsToReturn}
 // After defining your schema, go to your project root(where sqlc.yaml is) and use "sqlc generate" to generate the functions
-// For {noOfRecordsToReturn} when you are not returning a query result, you use :exec, but if you return one or many records,
-// you use :one or :many respectively
+// For {noOfRecordsToReturn} when you are not returning a query result, you use :exec, but if you return one or many,
+// you use :one and :many respectively. :execrows is special because say for a delete operation, the query may delete multiple rows;
+// it deletes and shows the number of records that were deleted
 func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowParams) (FeedFollow, error) {
 	row := q.db.QueryRowContext(ctx, createFeedFollow,
 		arg.ID,
@@ -50,7 +51,7 @@ func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowPara
 	return i, err
 }
 
-const deleteFeedFollowsById = `-- name: DeleteFeedFollowsById :exec
+const deleteFeedFollowsById = `-- name: DeleteFeedFollowsById :execrows
 DELETE FROM feed_follows 
 WHERE id=$1 AND user_id=$2
 RETURNING id, feed_id, user_id, created_at, updated_at
@@ -61,9 +62,12 @@ type DeleteFeedFollowsByIdParams struct {
 	UserID uuid.UUID
 }
 
-func (q *Queries) DeleteFeedFollowsById(ctx context.Context, arg DeleteFeedFollowsByIdParams) error {
-	_, err := q.db.ExecContext(ctx, deleteFeedFollowsById, arg.ID, arg.UserID)
-	return err
+func (q *Queries) DeleteFeedFollowsById(ctx context.Context, arg DeleteFeedFollowsByIdParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteFeedFollowsById, arg.ID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getFeedFollowsByUserId = `-- name: GetFeedFollowsByUserId :many
