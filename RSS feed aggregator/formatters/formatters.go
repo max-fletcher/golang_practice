@@ -114,3 +114,64 @@ func DatabaseFeedFollowsToFeedFollows(dbFeedFollows []database.FeedFollow) []Fee
 
 	return feedFollows
 }
+
+type Post struct {
+	ID     uuid.UUID `json:"id"`
+	FeedID uuid.UUID `json:"feed_id"`
+	Title  string    `json:"title"`
+	// Although we are passing an sql.NullString inside dbPosts, we are doing this since passing a pointer will cause either
+	// the string or the null value(the value that the pointer is pointing to) to be inside the description field when it is returned as json.
+	// This is how marshalling to json in go works i.e if a pointer points to null, it will return null in that json field,
+	// and if a pointer points to a string, it will return string in that json field. Otherwise, if we directly used post.Description,
+	// due to the, dbFeed.description struct containing nested fields(sql.NullString obj) it will be marshalled to
+	// "description": { "String" : "Some des", Valid : true }
+	Description *string   `json:"description"`
+	PublishedAt time.Time `json:"published_at"`
+	Url         string    `json:"url"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func DatabasePostsToPost(dbPost database.Post) Post {
+	var description *string // a var containing a pointer to a string
+	if dbPost.Description.Valid {
+		description = &dbPost.Description.String
+	}
+
+	return Post{
+		ID:          dbPost.ID,
+		FeedID:      dbPost.FeedID,
+		Title:       dbPost.Title,
+		Description: description,
+		PublishedAt: dbPost.PublishedAt,
+		Url:         dbPost.Url,
+		CreatedAt:   dbPost.CreatedAt,
+		UpdatedAt:   dbPost.UpdatedAt,
+	}
+}
+
+func DatabasePostsToPosts(dbPosts []database.Post) []Post {
+	posts := []Post{}
+
+	var description *string // a var containing a pointer to a string
+	for _, dbPost := range dbPosts {
+		if dbPost.Description.Valid {
+			description = &dbPost.Description.String
+		}
+		posts = append(posts, Post{
+			ID:          dbPost.ID,
+			FeedID:      dbPost.FeedID,
+			Title:       dbPost.Title,
+			Description: description,
+			PublishedAt: dbPost.PublishedAt,
+			Url:         dbPost.Url,
+			CreatedAt:   dbPost.CreatedAt,
+			UpdatedAt:   dbPost.UpdatedAt,
+		})
+
+		// This also works if you want to reuse functionality i.e replace above block with the line below
+		// posts = append(posts, DatabasePostsToPost(dbFeed))
+	}
+
+	return posts
+}

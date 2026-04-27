@@ -2,12 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"dummy/internal/database"
 	"log"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
+// a scraper that starts when our go code is executed. This runs every "timeBetweenRequest" so if "timeBetweenRequest = 1 min"
+// it will run every 1 minute
 func startScraping(db *database.Queries, concurrency int, timeBetweenRequest time.Duration) {
 	log.Printf("Scraping on %v goroutines every %s duration", concurrency, timeBetweenRequest)
 
@@ -57,8 +63,38 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
 		return
 	}
 
+	// looping through the rssFeeds and inserting then into the database.
+	// #TODO: Try using batch inserts later
 	for _, item := range rssFeed.Channel.Item {
-		log.Println("Found post", item.Title, " on feed ", feed.Name)
+		// log.Println("Found post", item.Title, " on feed ", feed.Name)
+
+		// Creating a sql null string object(from sql package). Otherwise, go 's type system doesn't comply with nullable values.
+		description := sql.NullString{}
+		if item.Description != "" {
+			description.String = item.Description
+			description.Valid = true
+		}
+		pubAt, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			log.Printf("Error parsing published at date %v : %v", item.PubDate, err)
+		}
+
+		_, err = db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			FeedID:      feed.ID,
+			Title:       item.Title,
+			Description: description,
+			PublishedAt: pubAt,
+			Url:         item.Link,
+		})
+		if err != nil {
+			// "strings.Contains" - if the string contains a substring. Returns a boolean.
+			//  If error contains the substring "duplicate key", then continue the loop instead of logging it.
+			if strings.Contains(err.Error(), "duplicate key") {
+				continue
+			}
+			log.Printf("Error inserting posts into database: %v", err)
+		}
 	}
 	log.Printf("Feed %v collected, %v posts found", feed.Name, len(rssFeed.Channel.Item))
 }

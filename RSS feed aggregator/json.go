@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// TODO: Where should these (successResponse and errorResponse) be placed ??
+// #TODO: Where should these (successResponse and errorResponse) be placed ??
 type successResponse struct {
 	Code   int         `json:"code"`
 	Status string      `json:"status"`

@@ -25,6 +25,7 @@ type RSSItem struct {
 	PubDate     string `xml:"pubDate"`
 }
 
+// Hits a url, fetches the xml data form that url, then marshalls it into an suitable struct form(RSSFeed) and returns it
 func urlToFeed(url string) (RSSFeed, error) {
 	httpClient := http.Client{ // creates an http client for making API requests
 		Timeout: 10 * time.Second,

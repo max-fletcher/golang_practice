@@ -133,14 +133,20 @@ func main() {
 	// v1router.Get("/users2", apiCfg.handlerGetUserByAPIKey2) // route for getting user by apiKey header in DB
 
 	v1router.Get("/healthz", handlerReadiness)
+
 	v1router.Get("/error", handlerError)
-	v1router.Post("/users", apiCfg.handlerCreateUser)                                                                   // route for creating users in DB
-	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey))                               // route for getting user by apiKey header in DB
-	v1router.Get("/feeds", apiCfg.handlerGetFeeds)                                                                      // route for getting all feed in DB
-	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed))                                   // route for creating a feed in DB
+
+	v1router.Post("/users", apiCfg.handlerCreateUser)                                     // route for creating users in DB
+	v1router.Get("/users", apiCfg.authenticatedMiddleware(apiCfg.handlerGetUserByAPIKey)) // route for getting user by apiKey header in DB
+
+	v1router.Get("/feeds", apiCfg.handlerGetFeeds)                                    // route for getting all feed in DB
+	v1router.Post("/feeds", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeed)) // route for creating a feed in DB
+
 	v1router.Post("/feed_follows", apiCfg.authenticatedMiddleware(apiCfg.handlerCreateFeedFollow))                      // route for creating a feed follow in DB
 	v1router.Get("/feed_follows_by_user", apiCfg.authenticatedMiddleware(apiCfg.handlerGetFeedFollowsByUserID))         // route for getting all feed follows in DB
 	v1router.Delete("/feed_follows/{feedFollowId}", apiCfg.authenticatedMiddleware(apiCfg.handleDeleteFeedFollowsById)) // route for deleting feed follow for a user in DB
+
+	v1router.Get("/posts", apiCfg.authenticatedMiddleware(apiCfg.handlerGetPostsForUser)) // route for getting all posts for a feed if the user is following that feed
 	router.Mount("/v1", v1router)
 
 	// Server options like router and port
